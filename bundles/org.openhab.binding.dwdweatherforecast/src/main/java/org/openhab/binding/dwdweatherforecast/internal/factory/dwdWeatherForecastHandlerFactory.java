@@ -10,12 +10,14 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.dwdweatherforecast.internal;
+package org.openhab.binding.dwdweatherforecast.internal.factory;
 
 import static org.openhab.binding.dwdweatherforecast.internal.dwdWeatherForecastBindingConstants.*;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -24,6 +26,8 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
+import org.openhab.binding.dwdweatherforecast.internal.handler.dwdForecastBridgeHandler;
+import org.openhab.binding.dwdweatherforecast.internal.handler.dwdLocalForecastHandler;
 import org.osgi.service.component.annotations.Component;
 
 /**
@@ -36,7 +40,11 @@ import org.osgi.service.component.annotations.Component;
 @Component(configurationPid = "binding.dwdweatherforecast", service = ThingHandlerFactory.class)
 public class dwdWeatherForecastHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.singleton(THING_TYPE_SAMPLE);
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections
+        .unmodifiableSet(Stream
+            .concat(dwdForecastBridgeHandler.SUPPORTED_THING_TYPES.stream(),
+                    dwdLocalForecastHandler.SUPPORTED_THING_TYPES.stream())
+            .collect(Collectors.toSet()));
 
     @Override
     public boolean supportsThingType(ThingTypeUID thingTypeUID) {
@@ -48,7 +56,7 @@ public class dwdWeatherForecastHandlerFactory extends BaseThingHandlerFactory {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (THING_TYPE_SAMPLE.equals(thingTypeUID)) {
-            return new dwdWeatherForecastHandler(thing);
+            return new dwdForecastBridgeHandler(thing);
         }
 
         return null;

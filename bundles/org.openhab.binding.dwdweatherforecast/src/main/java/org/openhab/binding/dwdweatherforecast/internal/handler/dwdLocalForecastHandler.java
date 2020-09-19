@@ -10,18 +10,23 @@
  *
  * SPDX-License-Identifier: EPL-2.0
  */
-package org.openhab.binding.dwdweatherforecast.internal;
+package org.openhab.binding.dwdweatherforecast.internal.handler;
 
 import static org.openhab.binding.dwdweatherforecast.internal.dwdWeatherForecastBindingConstants.*;
+
+import java.util.Collections;
+import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
+import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
+import org.openhab.binding.dwdweatherforecast.internal.dwdWeatherForecastConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,21 +37,23 @@ import org.slf4j.LoggerFactory;
  * @author Lars Ottawa - Initial contribution
  */
 @NonNullByDefault
-public class dwdWeatherForecastHandler extends BaseThingHandler {
+public class dwdLocalForecastHandler extends BaseThingHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(dwdWeatherForecastHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(dwdLocalForecastHandler.class);
+
+    public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections.singleton(THING_TYPE_DWD_LOCAL_FORECAST);
 
     private @Nullable dwdWeatherForecastConfiguration config;
 
-    public dwdWeatherForecastHandler(Thing thing) {
+    public dwdLocalForecastHandler(Thing thing) {
         super(thing);
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        if (CHANNEL_1.equals(channelUID.getId())) {
+        if (CHANNEL_MAX_TEMPERATURE.equals(channelUID.getId())) {
             if (command instanceof RefreshType) {
-                // TODO: handle data refresh
+                logger.info("Refresh Max Temperature Channel");
             }
 
             // TODO: handle command

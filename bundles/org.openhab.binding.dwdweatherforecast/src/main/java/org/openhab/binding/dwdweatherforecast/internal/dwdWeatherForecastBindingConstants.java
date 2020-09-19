@@ -26,9 +26,11 @@ public class dwdWeatherForecastBindingConstants {
 
     private static final String BINDING_ID = "dwdweatherforecast";
 
-    // List of all Thing Type UIDs
-    public static final ThingTypeUID THING_TYPE_SAMPLE = new ThingTypeUID(BINDING_ID, "sample");
+    // Thing Type for DWD Weather Forecast Bridge
+    public static final ThingTypeUID THING_TYPE_DWD_FORECAST_BRIDGE = new ThingTypeUID(BINDING_ID, "dwd-weather-forcast-bridge");
+    // Thing Type for Local Forecast Thing
+    public static final ThingTypeUID THING_TYPE_DWD_LOCAL_FORECAST = new ThingTypeUID(BINDING_ID, "local-forecast");
 
-    // List of all Channel ids
-    public static final String CHANNEL_1 = "channel1";
+    // List of all Channels
+    public static final String CHANNEL_MAX_TEMPERATURE = "max-temperature";
 }
