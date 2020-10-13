@@ -3,8 +3,9 @@
 	xmlns:binding="https://openhab.org/schemas/binding/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/binding/v1.0.0 https://openhab.org/schemas/binding-1.0.0.xsd">
 
-	<name>dwdWeatherForecast Binding</name>
-	<description>This is the binding for dwdWeatherForecast.</description>
+	<name>DWD Weather Forecast Binding</name>
+	<description>This is the binding for the Deutsche Wetterdienst (DWD) Local Weather Forecast. The data 
+	is provided on the DWD opendata web site: https://opendata.dwd.de.</description>
 	<author>Lars Ottawa</author>
 
 </binding:binding>

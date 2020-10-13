@@ -27,7 +27,7 @@ public class dwdWeatherForecastBindingConstants {
     private static final String BINDING_ID = "dwdweatherforecast";
 
     // Thing Type for DWD Weather Forecast Bridge
-    public static final ThingTypeUID THING_TYPE_DWD_FORECAST_BRIDGE = new ThingTypeUID(BINDING_ID, "dwd-weather-forcast-bridge");
+    public static final ThingTypeUID THING_TYPE_DWD_FORECAST_BRIDGE = new ThingTypeUID(BINDING_ID, "dwd-weather-forecast-bridge");
     // Thing Type for Local Forecast Thing
     public static final ThingTypeUID THING_TYPE_DWD_LOCAL_FORECAST = new ThingTypeUID(BINDING_ID, "local-forecast");
 

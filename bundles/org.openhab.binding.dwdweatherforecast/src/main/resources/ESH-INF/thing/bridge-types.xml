@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="dwdweatherforecast"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<!-- Bridge of the DWD Weather Forecast Binding -->
+	<bridge-type id="dwd-weather-forecast-bridge">
+		<label>DWD Weather Forecast Opendata Bridge</label>
+		<description>This bridge the DWD OpenData page and reads the MOSMIX Stations list. This is required to determine the nearest DWD weather station of your location.</description>
+
+		<representation-property>refreshInterval</representation-property>
+
+		<config-description-ref uri="bridge-type:dwd:weather-forecast-bridge" />
+
+	</bridge-type>
+
+</thing:thing-descriptions>

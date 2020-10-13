@@ -4,29 +4,56 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- Sample Thing Type -->
-	<thing-type id="sample">
-		<label>dwdWeatherForecast Binding Thing</label>
-		<description>Sample thing for dwdWeatherForecast Binding</description>
+	<!-- Thing Type for the DWD Weather Forecast Binding -->
+	<thing-type id="local-forecast">
 
-		<channels>
-			<channel id="channel1" typeId="sample-channel" />
-		</channels>
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="dwd-weather-forecast-bridge"/>
+		</supported-bridge-type-refs>
 
-		<config-description>
-			<parameter name="config1" type="text" required="true">
-				<label>Sample Parameter</label>
-				<description>This is a sample text configuration parameter</description>
-			</parameter>
-		</config-description>
+		<label>DWD Local Weather Forecast Thing</label>
+		<description>This thing represents the Local Weather Forecast from the Deutsche Wetterdienst (DWD) for a specific location</description>
+
+		<channel-groups>
+			<channel-group id="current" typeId="current"/>
+			<channel-group id="forecastToday" typeId="dailyForecast">
+				<label>Todays Forecast</label>
+				<description>This is the weather forecast for today.</description>
+			</channel-group>
+			<channel-group id="forecastTomorrow" typeId="dailyForecast">
+				<label>Tomorrows Forecast</label>
+				<description>This is the weather forecast for tomorrow.</description>
+			</channel-group>
+			<channel-group id="forecastDay2" typeId="dailyForecast">
+				<label>2 Day Forecast</label>
+				<description>This is the weather forecast in two days.</description>
+			</channel-group>
+			<channel-group id="forecastDay3" typeId="dailyForecast">
+				<label>3 Day Forecast</label>
+				<description>This is the weather forecast in three days.</description>
+			</channel-group>
+			<channel-group id="forecastDay4" typeId="dailyForecast">
+				<label>4 Day Forecast</label>
+				<description>This is the weather forecast in four days.</description>
+			</channel-group>
+			<channel-group id="forecastDay5" typeId="dailyForecast">
+				<label>5 Day Forecast</label>
+				<description>This is the weather forecast in five days.</description>
+			</channel-group>
+			<channel-group id="forecastDay6" typeId="dailyForecast">
+				<label>6 Day Forecast</label>
+				<description>This is the weather forecast in six days.</description>
+			</channel-group>
+			<channel-group id="forecastDay7" typeId="dailyForecast">
+				<label>7 Day Forecast</label>
+				<description>This is the weather forecast in seven days.</description>
+			</channel-group>
+		</channel-groups>
+
+		<representation-property>location</representation-property>
+
+		<config-description-ref uri="thing-type:dwd:local-forecast"/>
 
 	</thing-type>
-
-	<!-- Sample Channel Type -->
-	<channel-type id="sample-channel">
-		<item-type>dwdweatherforecastItem</item-type>
-		<label>dwdWeatherForecast Binding Channel</label>
-		<description>Sample channel for dwdWeatherForecast Binding</description>
-	</channel-type>
 
 </thing:thing-descriptions>

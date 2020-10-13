@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config-description:config-descriptions
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
+
+	<!-- Config for Dark Sky Binding -->
+	<config-description uri="bridge-type:darksky:weather-api">
+
+		<parameter name="refreshInterval" type="integer" min="1" unit="h">
+			<label>Refresh Interval</label>
+			<description>Specifies the refresh interval (in hours).</description>
+			<default>24</default>
+		</parameter>
+
+	</config-description>
+
+	<config-description uri="thing-type:dwd:local-forecast">
+
+		<parameter name="location" type="text" required="true">
+			<context>location</context>
+			<label>Location of Weather</label>
+			<description>Location of weather in geographical coordinates (latitude/longitude/altitude).</description>
+		</parameter>
+		<parameter name="forecastDays" type="integer" min="0" max="10" step="1">
+			<label>Number of Days</label>
+			<description>Number of days for daily forecast.</description>
+			<default>8</default>
+		</parameter>
+		
+	</config-description>
+
+	
+
+</config-description:config-descriptions>
