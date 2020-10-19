@@ -12,13 +12,14 @@
  */
 package org.openhab.binding.dwdweatherforecast.internal.handler;
 
-import static org.openhab.binding.dwdweatherforecast.internal.dwdWeatherForecastBindingConstants.*;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdWeatherForecastBindingConstants.*;
 
 import java.util.Collections;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.smarthome.core.thing.ChannelUID;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingStatus;
@@ -26,7 +27,7 @@ import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
-import org.openhab.binding.dwdweatherforecast.internal.dwdWeatherForecastConfiguration;
+import org.openhab.binding.dwdweatherforecast.internal.config.DwdLocalForecastHandlerConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,16 +38,19 @@ import org.slf4j.LoggerFactory;
  * @author Lars Ottawa - Initial contribution
  */
 @NonNullByDefault
-public class dwdLocalForecastHandler extends BaseThingHandler {
+public class DwdLocalForecastHandler extends BaseThingHandler {
 
-    private final Logger logger = LoggerFactory.getLogger(dwdLocalForecastHandler.class);
+    private final Logger logger = LoggerFactory.getLogger(DwdLocalForecastHandler.class);
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections.singleton(THING_TYPE_DWD_LOCAL_FORECAST);
 
-    private @Nullable dwdWeatherForecastConfiguration config;
+    private final HttpClient httpClient;
 
-    public dwdLocalForecastHandler(Thing thing) {
+    private @Nullable DwdLocalForecastHandlerConfiguration config;
+
+    public DwdLocalForecastHandler(Thing thing, HttpClient httpClient) {
         super(thing);
+        this.httpClient = httpClient;
     }
 
     @Override
@@ -68,7 +72,7 @@ public class dwdLocalForecastHandler extends BaseThingHandler {
     @Override
     public void initialize() {
         // logger.debug("Start initializing!");
-        config = getConfigAs(dwdWeatherForecastConfiguration.class);
+        config = getConfigAs(DwdLocalForecastHandlerConfiguration.class);
 
         // TODO: Initialize the handler.
         // The framework requires you to return from this method quickly. Also, before leaving this method a thing

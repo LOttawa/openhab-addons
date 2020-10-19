@@ -10,7 +10,7 @@
 		<description>This is the current weather.</description>
 		<channels>
 			<channel id="time-stamp" typeId="time-stamp"/>
-			<channel id="temperature" typeId="outdoor-temperature"/>
+			<channel id="temperature" typeId="system.outdoor-temperature"/>
 		</channels>
 	</channel-group-type>
 
@@ -39,14 +39,6 @@
 		<description>Date of data forecasted.</description>
 		<category>Time</category>
 		<state readOnly="true" pattern="%1$tY-%1$tm-%1$td"/>
-	</channel-type>
-
-	<channel-type id="outdoor-temperature">
-		<item-type>Number:Temperature</item-type>
-		<label>Temperature</label>
-		<description>Current outdoor temperature.</description>
-		<category>Temperature</category>
-		<state readOnly="true" pattern="%.1f %unit%"/>
 	</channel-type>
 
 	<channel-type id="forecasted-min-outdoor-temperature">

@@ -16,13 +16,13 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 
 /**
- * The {@link dwdWeatherForecastBindingConstants} class defines common constants, which are
+ * The {@link DwdWeatherForecastBindingConstants} class defines common constants, which are
  * used across the whole binding.
  *
  * @author Lars Ottawa - Initial contribution
  */
 @NonNullByDefault
-public class dwdWeatherForecastBindingConstants {
+public class DwdWeatherForecastBindingConstants {
 
     private static final String BINDING_ID = "dwdweatherforecast";
 
