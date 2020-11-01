@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.dwdweatherforecast.internal.discovery;
 
-import static org.openhab.binding.dwdweatherforecast.internal.DwdWeatherForecastBindingConstants.*;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.*;
 
 import java.util.Vector;
 import java.util.concurrent.ScheduledFuture;
@@ -28,7 +28,7 @@ import org.eclipse.smarthome.core.i18n.TranslationProvider;
 import org.eclipse.smarthome.core.library.types.PointType;
 import org.eclipse.smarthome.core.thing.ThingUID;
 import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastBridgeHandler;
-import org.openhab.binding.dwdweatherforecast.internal.handler.DwdLocalForecastHandler;
+import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +52,7 @@ public class DwdForecastDiscoveryService extends AbstractDiscoveryService {
 
     public DwdForecastDiscoveryService(DwdForecastBridgeHandler bridgeHandler, LocationProvider locationProvider,
             LocaleProvider localeProvider, TranslationProvider i18nProvider) {
-        super(DwdLocalForecastHandler.SUPPORTED_THING_TYPES, DISCOVERY_TIMEOUT);
+        super(DwdForecastHandler.SUPPORTED_THING_TYPES, DISCOVERY_TIMEOUT);
         this.bridgeHandler = bridgeHandler;
         this.i18nProvider = i18nProvider;
         this.localeProvider = localeProvider;

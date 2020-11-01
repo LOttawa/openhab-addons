@@ -14,25 +14,40 @@ package org.openhab.binding.dwdweatherforecast.internal;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.type.ChannelGroupTypeUID;
 
 /**
- * The {@link DwdWeatherForecastBindingConstants} class defines common constants, which are
+ * The {@link DwdForecastBindingConstants} class defines common constants, which are
  * used across the whole binding.
  *
  * @author Lars Ottawa - Initial contribution
  */
 @NonNullByDefault
-public class DwdWeatherForecastBindingConstants {
+public class DwdForecastBindingConstants {
 
     private static final String BINDING_ID = "dwdweatherforecast";
+
+    public static final String CONFIG_LOCATION = "location";
 
     // Thing Type for DWD Weather Forecast Bridge
     public static final ThingTypeUID THING_TYPE_DWD_FORECAST_BRIDGE = new ThingTypeUID(BINDING_ID, "dwd-weather-forecast-bridge");
     // Thing Type for Local Forecast Thing
     public static final ThingTypeUID THING_TYPE_DWD_LOCAL_FORECAST = new ThingTypeUID(BINDING_ID, "local-forecast");
 
-    public static final String CONFIG_LOCATION = "location";
+    // Channel group types
+    public static final ChannelGroupTypeUID CHANNEL_GROUP_TYPE_DAILY_FORECAST = new ChannelGroupTypeUID(BINDING_ID,
+            "dailyForecast");
+
+    // List of all channel groups
+    public static final String CHANNEL_GROUP_CURRENT_WEATHER = "current";
+    public static final String CHANNEL_GROUP_FORECAST_TODAY = "forecastToday";
+    public static final String CHANNEL_GROUP_FORECAST_TOMORROW = "forecastTomorrow";
 
     // List of all Channels
+    public static final String CHANNEL_TIME_STAMP = "time-stamp";
+    public static final String CHANNEL_TEMPERATURE = "temperature";
     public static final String CHANNEL_MAX_TEMPERATURE = "max-temperature";
+    public static final String CHANNEL_MIN_TEMPERATURE = "min-temperature";
+
+    public static final String EVENT_START = "START";
 }

@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.dwdweatherforecast.internal.factory;
 
-import static org.openhab.binding.dwdweatherforecast.internal.DwdWeatherForecastBindingConstants.*;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.*;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -39,25 +39,25 @@ import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
 import org.eclipse.smarthome.io.net.http.HttpClientFactory;
 import org.openhab.binding.dwdweatherforecast.internal.discovery.DwdForecastDiscoveryService;
 import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastBridgeHandler;
-import org.openhab.binding.dwdweatherforecast.internal.handler.DwdLocalForecastHandler;
+import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastHandler;
 import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 /**
- * The {@link DwdWeatherForecastHandlerFactory} is responsible for creating
+ * The {@link DwdForecastHandlerFactory} is responsible for creating
  * things and thing handlers.
  *
  * @author Lars Ottawa - Initial contribution
  */
 @NonNullByDefault
 @Component(configurationPid = "binding.dwdweatherforecast", service = ThingHandlerFactory.class)
-public class DwdWeatherForecastHandlerFactory extends BaseThingHandlerFactory {
+public class DwdForecastHandlerFactory extends BaseThingHandlerFactory {
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections
             .unmodifiableSet(Stream.concat(DwdForecastBridgeHandler.SUPPORTED_THING_TYPES.stream(),
-                    DwdLocalForecastHandler.SUPPORTED_THING_TYPES.stream()).collect(Collectors.toSet()));
+                    DwdForecastHandler.SUPPORTED_THING_TYPES.stream()).collect(Collectors.toSet()));
 
     private final Map<ThingUID, ServiceRegistration<?>> discoveryServiceRegs = new HashMap<>();
     private final HttpClient httpClient;
@@ -66,7 +66,7 @@ public class DwdWeatherForecastHandlerFactory extends BaseThingHandlerFactory {
     private final TranslationProvider translationProvider;
 
     @Activate
-    public DwdWeatherForecastHandlerFactory(final @Reference HttpClientFactory httpClientFactory,
+    public DwdForecastHandlerFactory(final @Reference HttpClientFactory httpClientFactory,
             final @Reference LocationProvider locationProvider, final @Reference LocaleProvider localeProvider, final @Reference TranslationProvider translationProvider) {
         this.httpClient = httpClientFactory.getCommonHttpClient();
         this.localeProvider = localeProvider;
@@ -91,7 +91,7 @@ public class DwdWeatherForecastHandlerFactory extends BaseThingHandlerFactory {
                     .registerService(DiscoveryService.class.getName(), discoveryService, new Hashtable<>()));
             return bridgeHandler;
         } else if (THING_TYPE_DWD_LOCAL_FORECAST.equals(thingTypeUID)) {
-            return new DwdLocalForecastHandler(thing, this.httpClient);
+            return new DwdForecastHandler(thing, this.httpClient);
         }
 
         return null;

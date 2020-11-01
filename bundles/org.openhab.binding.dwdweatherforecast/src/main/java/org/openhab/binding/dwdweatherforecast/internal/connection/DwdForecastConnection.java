@@ -28,7 +28,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.smarthome.core.cache.ExpiringCacheMap;
-import org.openhab.binding.dwdweatherforecast.internal.config.DwdForecastBridgeConfiguration;
+import org.openhab.binding.dwdweatherforecast.internal.config.DwdForecastBridgeHandlerConfiguration;
 import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastBridgeHandler;
 import org.openhab.binding.dwdweatherforecast.internal.model.MosmixStationsList;
 import org.openhab.binding.dwdweatherforecast.internal.model.MosmixStationsList.StationDetails;
@@ -42,9 +42,9 @@ import org.slf4j.LoggerFactory;
  * @author Lars Ottawa - Initial contribution
  */
 @NonNullByDefault
-public class DwdWeatherForecastConnection {
+public class DwdForecastConnection {
 
-    private final Logger logger = LoggerFactory.getLogger(DwdWeatherForecastConnection.class);
+    private final Logger logger = LoggerFactory.getLogger(DwdForecastConnection.class);
 
     private MosmixStationsList stations;
 
@@ -55,11 +55,11 @@ public class DwdWeatherForecastConnection {
 
     public static final String MOSMIX_STATIONS_LIST_URL = "https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg?view=nasPublication&nn=16102";
 
-    public DwdWeatherForecastConnection(DwdForecastBridgeHandler handler, HttpClient httpClient) {
+    public DwdForecastConnection(DwdForecastBridgeHandler handler, HttpClient httpClient) {
         this.httpClient = httpClient;
         this.handler = handler;
 
-        DwdForecastBridgeConfiguration config = handler.getDwdForecastBridgeConfiguration();
+        DwdForecastBridgeHandlerConfiguration config = handler.getDwdForecastBridgeConfiguration();
         cache = new ExpiringCacheMap<>(TimeUnit.HOURS.toMillis(config.refreshInterval));
     }
 

@@ -12,7 +12,7 @@
  */
 package org.openhab.binding.dwdweatherforecast.internal.handler;
 
-import static org.openhab.binding.dwdweatherforecast.internal.DwdWeatherForecastBindingConstants.*;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.*;
 
 import java.util.Collections;
 import java.util.Set;
@@ -29,10 +29,11 @@ import org.eclipse.smarthome.core.thing.ThingStatus;
 import org.eclipse.smarthome.core.thing.ThingStatusDetail;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
 import org.eclipse.smarthome.core.thing.binding.BaseBridgeHandler;
+import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.types.Command;
 import org.eclipse.smarthome.core.types.RefreshType;
-import org.openhab.binding.dwdweatherforecast.internal.config.DwdForecastBridgeConfiguration;
-import org.openhab.binding.dwdweatherforecast.internal.connection.DwdWeatherForecastConnection;
+import org.openhab.binding.dwdweatherforecast.internal.config.DwdForecastBridgeHandlerConfiguration;
+import org.openhab.binding.dwdweatherforecast.internal.connection.DwdForecastConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,12 +50,14 @@ public class DwdForecastBridgeHandler extends BaseBridgeHandler {
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections.singleton(THING_TYPE_DWD_FORECAST_BRIDGE);
 
+    private static final long INITIAL_DELAY_IN_SECONDS = 30;
+
     private @Nullable ScheduledFuture<?> refreshJob; 
 
     private HttpClient httpClient;
-    private DwdWeatherForecastConnection connection;
+    private DwdForecastConnection connection;
 
-    private @Nullable DwdForecastBridgeConfiguration config;
+    private @Nullable DwdForecastBridgeHandlerConfiguration config;
 
     public DwdForecastBridgeHandler(Bridge bridge, HttpClient httpClient) {
         super(bridge);
@@ -62,26 +65,9 @@ public class DwdForecastBridgeHandler extends BaseBridgeHandler {
     }
 
     @Override
-    public void handleCommand(ChannelUID channelUID, Command command) {
-        if (CHANNEL_MAX_TEMPERATURE.equals(channelUID.getId())) {
-            if (command instanceof RefreshType) {
-                // TODO: handle data refresh
-                logger.debug("Refresh Channel Max-Temperature");
-            }
-
-            // TODO: handle command
-
-            // Note: if communication with thing fails for some reason,
-            // indicate that by setting the status with detail information:
-            // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-            // "Could not control device at IP address x.x.x.x");
-        }
-    }
-
-    @Override
     public void initialize() {
         logger.debug("Start initializing DWD Weather Forecast Bridge handler '{}'.", getThing().getUID());
-        config = getConfigAs(DwdForecastBridgeConfiguration.class);
+        config = getConfigAs(DwdForecastBridgeHandlerConfiguration.class);
 
         boolean validConfig = true;
 
@@ -95,38 +81,76 @@ public class DwdForecastBridgeHandler extends BaseBridgeHandler {
 
         if (validConfig) {
 
-            this.connection = new DwdWeatherForecastConnection(this, httpClient);
+            this.connection = new DwdForecastConnection(this, httpClient);
 
             updateStatus(ThingStatus.UNKNOWN);
 
             ScheduledFuture<?> refreshJob = this.refreshJob;
             if (refreshJob == null) {
-                this.refreshJob = scheduler.scheduleWithFixedDelay(this::updateThings, 30,
+                this.refreshJob = scheduler.scheduleWithFixedDelay(this::updateThings, INITIAL_DELAY_IN_SECONDS,
                         TimeUnit.HOURS.toSeconds(refreshInterval), TimeUnit.SECONDS);
             }
 
         }
+    }
 
-        // logger.debug("Finished initializing!");
+    @Override
+    public void dispose() {
+        logger.debug("Dispose DWD Forecast Bridge handler '{}'.", getThing().getUID());
+        ScheduledFuture<?> localRefreshJob = refreshJob;
+        if (localRefreshJob != null && !localRefreshJob.isCancelled()) {
+            logger.debug("Stop refresh job.");
+            if (localRefreshJob.cancel(true)) {
+                refreshJob = null;
+            }
+        }
+    }
 
-        // Note: When initialization can NOT be done set the status with more details for further
-        // analysis. See also class ThingStatusDetail for all available status details.
-        // Add a description to give user information to understand why thing does not work as expected. E.g.
-        // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-        // "Can not access device as username and/or password are invalid");
+    @Override
+    public void handleCommand(ChannelUID channelUID, Command command) {
+        if (command instanceof RefreshType) {
+            scheduler.schedule(this::updateThings, INITIAL_DELAY_IN_SECONDS, TimeUnit.SECONDS);
+        } else {
+            logger.debug("The DWD Weather Forecast binding is a read-only binding and cannot handle command '{}'.",
+                    command);
+        }
+    }
+    
+    @Override
+    public void childHandlerInitialized(ThingHandler childHandler, Thing childThing) {
+        scheduler.schedule(() -> {
+            updateThing((DwdForecastHandler) childHandler, childThing);
+            determineBridgeStatus();
+        }, INITIAL_DELAY_IN_SECONDS, TimeUnit.SECONDS);
+    }
+
+    @Override
+    public void childHandlerDisposed(ThingHandler childHandler, Thing childThing) {
+        determineBridgeStatus();
+    }
+
+    private void determineBridgeStatus() {
+        ThingStatus status = ThingStatus.OFFLINE;
+        for (Thing thing : getThing().getThings()) {
+            if (ThingStatus.ONLINE.equals(thing.getStatus())) {
+                status = ThingStatus.ONLINE;
+                break;
+            }
+        }
+        updateStatus(status);
     }
 
     private void updateThings() {
         ThingStatus status = ThingStatus.OFFLINE;
         for (Thing thing : this.getThing().getThings()) {
-            if (ThingStatus.ONLINE.equals(updateThing((DwdLocalForecastHandler) thing.getHandler(), thing))) {
+            if (ThingStatus.ONLINE.equals(updateThing((DwdForecastHandler) thing.getHandler(), thing))) {
                 status = ThingStatus.ONLINE;
             }
         }
         updateStatus(status);
     }
 
-    private ThingStatus updateThing(DwdLocalForecastHandler handler, Thing thing) {
+    private ThingStatus updateThing(DwdForecastHandler handler, Thing thing) {
         if (handler != null && connection != null) {
             //handler.updateData(connection);
             return thing.getStatus();
@@ -136,7 +160,7 @@ public class DwdForecastBridgeHandler extends BaseBridgeHandler {
         }
      }
 
-    public DwdForecastBridgeConfiguration getDwdForecastBridgeConfiguration() {
+    public DwdForecastBridgeHandlerConfiguration getDwdForecastBridgeConfiguration() {
         return this.config;
     }
 }

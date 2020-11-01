@@ -13,16 +13,18 @@
 package org.openhab.binding.dwdweatherforecast.internal.config;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastBridgeHandler;
+import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastHandler;
 
 /**
- * The {@link DwdForecastBridgeConfiguration} class contains fields mapping bridge configuration parameters
- * of the {@link DwdForecastBridgeHandler}.
+ * The {@link DwdForecastHandlerConfiguration} class contains fields mapping thing configuration parameters
+ * of the {@link DwdForecastHandler}.
  *
  * @author Lars Ottawa - Initial contribution
  */
 @NonNullByDefault
-public class DwdForecastBridgeConfiguration {
+public class DwdForecastHandlerConfiguration {
+    
+    public @NonNullByDefault({}) String location;
+    public int forecastDays;
 
-    public int refreshInterval = 24;
 }
