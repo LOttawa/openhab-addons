@@ -15,6 +15,9 @@ package org.openhab.binding.dwdweatherforecast.internal.factory;
 import static org.openhab.binding.dwdweatherforecast.internal.DwdWeatherForecastBindingConstants.*;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Hashtable;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -22,18 +25,22 @@ import java.util.stream.Stream;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.smarthome.config.discovery.DiscoveryService;
 import org.eclipse.smarthome.core.i18n.LocaleProvider;
 import org.eclipse.smarthome.core.i18n.LocationProvider;
 import org.eclipse.smarthome.core.i18n.TranslationProvider;
 import org.eclipse.smarthome.core.thing.Bridge;
 import org.eclipse.smarthome.core.thing.Thing;
 import org.eclipse.smarthome.core.thing.ThingTypeUID;
+import org.eclipse.smarthome.core.thing.ThingUID;
 import org.eclipse.smarthome.core.thing.binding.BaseThingHandlerFactory;
 import org.eclipse.smarthome.core.thing.binding.ThingHandler;
 import org.eclipse.smarthome.core.thing.binding.ThingHandlerFactory;
 import org.eclipse.smarthome.io.net.http.HttpClientFactory;
+import org.openhab.binding.dwdweatherforecast.internal.discovery.DwdForecastDiscoveryService;
 import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastBridgeHandler;
 import org.openhab.binding.dwdweatherforecast.internal.handler.DwdLocalForecastHandler;
+import org.osgi.framework.ServiceRegistration;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -52,6 +59,7 @@ public class DwdWeatherForecastHandlerFactory extends BaseThingHandlerFactory {
             .unmodifiableSet(Stream.concat(DwdForecastBridgeHandler.SUPPORTED_THING_TYPES.stream(),
                     DwdLocalForecastHandler.SUPPORTED_THING_TYPES.stream()).collect(Collectors.toSet()));
 
+    private final Map<ThingUID, ServiceRegistration<?>> discoveryServiceRegs = new HashMap<>();
     private final HttpClient httpClient;
     private final LocationProvider locationProvider;
     private final LocaleProvider localeProvider;
@@ -76,11 +84,32 @@ public class DwdWeatherForecastHandlerFactory extends BaseThingHandlerFactory {
         ThingTypeUID thingTypeUID = thing.getThingTypeUID();
 
         if (THING_TYPE_DWD_FORECAST_BRIDGE.equals(thingTypeUID)) {
-            return new DwdForecastBridgeHandler((Bridge) thing, this.httpClient);
+            DwdForecastBridgeHandler bridgeHandler = new DwdForecastBridgeHandler((Bridge) thing, this.httpClient);
+            DwdForecastDiscoveryService discoveryService = new DwdForecastDiscoveryService(bridgeHandler,
+                    this.locationProvider, this.localeProvider, this.translationProvider);
+            discoveryServiceRegs.put(bridgeHandler.getThing().getUID(), bundleContext
+                    .registerService(DiscoveryService.class.getName(), discoveryService, new Hashtable<>()));
+            return bridgeHandler;
         } else if (THING_TYPE_DWD_LOCAL_FORECAST.equals(thingTypeUID)) {
             return new DwdLocalForecastHandler(thing, this.httpClient);
         }
 
         return null;
+    }
+
+    @Override
+    protected synchronized void removeHandler(ThingHandler thingHandler) {
+        if (thingHandler instanceof DwdForecastBridgeHandler) {
+            ServiceRegistration<?> serviceReg = discoveryServiceRegs.remove(thingHandler.getThing().getUID());
+            if (serviceReg != null) {
+                // remove discovery service, if bridge handler is removed
+                DwdForecastDiscoveryService discoveryService = (DwdForecastDiscoveryService) bundleContext
+                        .getService(serviceReg.getReference());
+                serviceReg.unregister();
+                if (discoveryService != null) {
+                    discoveryService.deactivate();
+                }
+            }
+        }
     }
 }

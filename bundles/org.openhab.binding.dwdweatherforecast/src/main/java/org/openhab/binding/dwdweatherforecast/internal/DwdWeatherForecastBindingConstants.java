@@ -31,6 +31,8 @@ public class DwdWeatherForecastBindingConstants {
     // Thing Type for Local Forecast Thing
     public static final ThingTypeUID THING_TYPE_DWD_LOCAL_FORECAST = new ThingTypeUID(BINDING_ID, "local-forecast");
 
+    public static final String CONFIG_LOCATION = "location";
+
     // List of all Channels
     public static final String CHANNEL_MAX_TEMPERATURE = "max-temperature";
 }
