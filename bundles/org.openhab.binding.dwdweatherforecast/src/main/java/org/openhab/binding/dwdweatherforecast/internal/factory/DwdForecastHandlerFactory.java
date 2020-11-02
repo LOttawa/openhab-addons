@@ -91,7 +91,7 @@ public class DwdForecastHandlerFactory extends BaseThingHandlerFactory {
                     .registerService(DiscoveryService.class.getName(), discoveryService, new Hashtable<>()));
             return bridgeHandler;
         } else if (THING_TYPE_DWD_LOCAL_FORECAST.equals(thingTypeUID)) {
-            return new DwdForecastHandler(thing, this.httpClient);
+            return new DwdForecastHandler(thing);
         }
 
         return null;

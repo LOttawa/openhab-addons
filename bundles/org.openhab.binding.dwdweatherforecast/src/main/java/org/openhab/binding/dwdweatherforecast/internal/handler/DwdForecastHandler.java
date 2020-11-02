@@ -12,11 +12,11 @@
  */
 package org.openhab.binding.dwdweatherforecast.internal.handler;
 
-import static org.eclipse.smarthome.core.library.unit.MetricPrefix.*;
 import static org.eclipse.smarthome.core.library.unit.SIUnits.*;
-import static org.eclipse.smarthome.core.library.unit.SmartHomeUnits.*;
 import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.*;
 
+import java.time.Instant;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -32,9 +32,11 @@ import java.util.regex.Pattern;
 
 import javax.measure.Unit;
 
+import com.google.gson.JsonSyntaxException;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
-import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.smarthome.core.library.types.DateTimeType;
 import org.eclipse.smarthome.core.library.types.PointType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
 import org.eclipse.smarthome.core.thing.Channel;
@@ -58,8 +60,8 @@ import org.eclipse.smarthome.core.types.UnDefType;
 import org.openhab.binding.dwdweatherforecast.internal.config.DwdForecastHandlerConfiguration;
 import org.openhab.binding.dwdweatherforecast.internal.connection.DwdForecastConnection;
 import org.openhab.binding.dwdweatherforecast.internal.model.DwdCurrentData;
-import org.openhab.binding.dwdweatherforecast.internal.model.DwdDailyData.DailyData;
-import org.openhab.binding.dwdweatherforecast.internal.model.xml.Kml;
+import org.openhab.binding.dwdweatherforecast.internal.model.DwdDailyData;
+import org.openhab.binding.dwdweatherforecast.internal.model.DwdWeatherData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,15 +95,12 @@ public class DwdForecastHandler extends BaseThingHandler {
     private static final Pattern CHANNEL_GROUP_DAILY_FORECAST_PREFIX_PATTERN = Pattern
             .compile(CHANNEL_GROUP_DAILY_FORECAST_PREFIX + "([0-9]*)");
 
-    private final HttpClient httpClient;
-
-    private @Nullable Kml weatherData;
+    private @Nullable DwdWeatherData weatherData;
 
     private @Nullable DwdForecastHandlerConfiguration config;
 
-    public DwdForecastHandler(Thing thing, HttpClient httpClient) {
+    public DwdForecastHandler(Thing thing) {
         super(thing);
-        this.httpClient = httpClient;
     }
 
     @Override
@@ -333,12 +332,12 @@ public class DwdForecastHandler extends BaseThingHandler {
     private void updateCurrentChannel(ChannelUID channelUID) {
         String channelId = channelUID.getIdWithoutGroup();
         String channelGroupId = channelUID.getGroupId();
-        if (this.weatherData != null && this.weatherData.getCurrently() != null) {
-            DwdCurrentData currentData = this.weatherData.getCurrently();
+        if (this.weatherData != null && this.weatherData.getCurrentData() != null) {
+            DwdCurrentData currentData = this.weatherData.getCurrentData();
             State state = UnDefType.UNDEF;
             switch (channelId) {
                 case CHANNEL_TIME_STAMP:
-                    state = getDateTimeTypeState(currentData.getTime());
+                    state = getDateTimeTypeState(currentData.getTimestamp());
                     break;
                 case CHANNEL_TEMPERATURE:
                     state = getQuantityTypeState(currentData.getTemperature(), CELSIUS);
@@ -360,18 +359,19 @@ public class DwdForecastHandler extends BaseThingHandler {
     private void updateDailyForecastChannel(ChannelUID channelUID, int count) {
         String channelId = channelUID.getIdWithoutGroup();
         String channelGroupId = channelUID.getGroupId();
-        if (this.weatherData != null && this.weatherData.getDaily() != null && this.weatherData.getDaily().getData().size() > count) {
-            DailyData forecastData = this.weatherData.getDaily().getData().get(count);
+
+        if (this.weatherData != null && this.weatherData.getDailyData() != null && this.weatherData.getDailyData().size() > count) {
+            DwdDailyData forecastData = this.weatherData.getDailyData().get(count);
             State state = UnDefType.UNDEF;
             switch (channelId) {
                 case CHANNEL_TIME_STAMP:
-                    state = getDateTimeTypeState(forecastData.getTime());
+                    state = getDateTimeTypeState(forecastData.getTimestamp());
                     break;
                 case CHANNEL_MIN_TEMPERATURE:
-                    state = getQuantityTypeState(forecastData.getTemperatureMin(), CELSIUS);
+                    state = getQuantityTypeState(forecastData.getMinTemperature(), CELSIUS);
                     break;
                 case CHANNEL_MAX_TEMPERATURE:
-                    state = getQuantityTypeState(forecastData.getTemperatureMax(), CELSIUS);
+                    state = getQuantityTypeState(forecastData.getMaxTemperature(), CELSIUS);
                     break;
 
             }
@@ -380,6 +380,10 @@ public class DwdForecastHandler extends BaseThingHandler {
         } else {
             logger.debug("No weather data available to update channel '{}' of group '{}'.", channelId, channelGroupId);
         }
+    }
+
+    private State getDateTimeTypeState(int value) {
+        return new DateTimeType(ZonedDateTime.ofInstant(Instant.ofEpochSecond(value), ZoneId.systemDefault()));
     }
 
     private State getQuantityTypeState(double value, Unit<?> unit) {
