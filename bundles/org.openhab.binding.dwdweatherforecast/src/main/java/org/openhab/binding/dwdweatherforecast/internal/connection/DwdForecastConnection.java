@@ -40,10 +40,10 @@ import org.eclipse.smarthome.core.cache.ExpiringCacheMap;
 import org.eclipse.smarthome.core.library.types.PointType;
 import org.openhab.binding.dwdweatherforecast.internal.config.DwdForecastBridgeHandlerConfiguration;
 import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastBridgeHandler;
-import org.openhab.binding.dwdweatherforecast.internal.model.DwdWeatherData;
-import org.openhab.binding.dwdweatherforecast.internal.model.MosmixStationsList;
-import org.openhab.binding.dwdweatherforecast.internal.model.MosmixStationsList.StationDetails;
-import org.openhab.binding.dwdweatherforecast.internal.model.xml.Kml;
+import org.openhab.binding.dwdweatherforecast.internal.dto.DwdWeatherData;
+import org.openhab.binding.dwdweatherforecast.internal.dto.MosmixStationsList;
+import org.openhab.binding.dwdweatherforecast.internal.dto.MosmixStationsList.StationDetails;
+import org.openhab.binding.dwdweatherforecast.internal.dto.xml.Kml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +72,8 @@ public class DwdForecastConnection {
         this.httpClient = httpClient;
         this.handler = handler;
 
+        this.stations = new MosmixStationsList();
+
         DwdForecastBridgeHandlerConfiguration config = handler.getDwdForecastBridgeConfiguration();
         this.cache = new ExpiringCacheMap<>(TimeUnit.HOURS.toMillis(config.refreshInterval));
     }
@@ -80,7 +82,7 @@ public class DwdForecastConnection {
         try {
             getMosmixStationsDataFromCache();
         } catch (Exception ex) {
-            logger.debug("Error while retrieving MOSMIX Stations from DWD site. Error: " + ex.getLocalizedMessage());
+            logger.debug("Error while retrieving MOSMIX Stations from DWD site. Error: {}", ex.getLocalizedMessage());
         }
     }
 
@@ -138,15 +140,15 @@ public class DwdForecastConnection {
                 cache.putValue(url, content);
 
             } catch (UnsupportedEncodingException ueex) {
-                logger.debug("Converting Weather Data from Byte to String with wrong encoding. Exception: "
-                        + ueex.getLocalizedMessage());
+                logger.debug("Converting Weather Data from Byte to String with wrong encoding. Exception: {}",
+                        ueex.getLocalizedMessage());
             } catch (IOException ioex) {
                 logger.debug(
-                        "Exception while unzipping the response or copying it to byte array outputstream. Exception: "
-                                + ioex.getLocalizedMessage());
+                        "Exception while unzipping the response or copying it to byte array outputstream. Exception: {}",
+                                ioex.getLocalizedMessage());
             } catch (InterruptedException | TimeoutException | ExecutionException ex) {
                 logger.debug(
-                        "Exception while getting response from DWD web site. Exception: " + ex.getLocalizedMessage());
+                        "Exception while getting response from DWD web site. Exception: {}", ex.getLocalizedMessage());
             }
         }
 
@@ -154,7 +156,7 @@ public class DwdForecastConnection {
     }
 
     private DwdWeatherData getDwdWeatherDataFromCacheContent(String content) {
-        return null;
+        return new DwdWeatherData();
     }
 
     private MosmixStationsList getMosmixStationsDataFromCache() {
@@ -242,8 +244,6 @@ public class DwdForecastConnection {
             throws InterruptedException, TimeoutException, ExecutionException {
 
         ContentResponse response = this.httpClient.newRequest(urlString).timeout(10, TimeUnit.SECONDS).send();
-
-        System.out.println("Http Status: " + response.getStatus());
 
         return new ByteArrayInputStream(response.getContent());
     }

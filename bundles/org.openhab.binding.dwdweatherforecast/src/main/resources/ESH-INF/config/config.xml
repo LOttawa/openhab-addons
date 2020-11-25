@@ -5,7 +5,7 @@
 	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
 
 	<!-- Config for Dark Sky Binding -->
-	<config-description uri="bridge-type:darksky:weather-api">
+	<config-description uri="bridge-type:dwd:weather-forecast-bridge">
 
 		<parameter name="refreshInterval" type="integer" min="1" unit="h">
 			<label>Refresh Interval</label>

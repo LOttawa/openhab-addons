@@ -55,9 +55,9 @@ public class DwdForecastBridgeHandler extends BaseBridgeHandler {
     private @Nullable ScheduledFuture<?> refreshJob; 
 
     private HttpClient httpClient;
-    private DwdForecastConnection connection;
+    private @Nullable DwdForecastConnection connection;
 
-    private @Nullable DwdForecastBridgeHandlerConfiguration config;
+    private DwdForecastBridgeHandlerConfiguration config;
 
     public DwdForecastBridgeHandler(Bridge bridge, HttpClient httpClient) {
         super(bridge);

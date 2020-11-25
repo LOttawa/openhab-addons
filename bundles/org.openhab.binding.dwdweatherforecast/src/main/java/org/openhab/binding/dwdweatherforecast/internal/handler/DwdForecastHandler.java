@@ -34,6 +34,7 @@ import javax.measure.Unit;
 
 import com.google.gson.JsonSyntaxException;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DateTimeType;
@@ -59,9 +60,9 @@ import org.eclipse.smarthome.core.types.State;
 import org.eclipse.smarthome.core.types.UnDefType;
 import org.openhab.binding.dwdweatherforecast.internal.config.DwdForecastHandlerConfiguration;
 import org.openhab.binding.dwdweatherforecast.internal.connection.DwdForecastConnection;
-import org.openhab.binding.dwdweatherforecast.internal.model.DwdCurrentData;
-import org.openhab.binding.dwdweatherforecast.internal.model.DwdDailyData;
-import org.openhab.binding.dwdweatherforecast.internal.model.DwdWeatherData;
+import org.openhab.binding.dwdweatherforecast.internal.dto.DwdCurrentData;
+import org.openhab.binding.dwdweatherforecast.internal.dto.DwdDailyData;
+import org.openhab.binding.dwdweatherforecast.internal.dto.DwdWeatherData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,7 +81,7 @@ public class DwdForecastHandler extends BaseThingHandler {
     private static final Map<String, Job> JOBS = new ConcurrentHashMap<>();
 
     // keeps track of the parsed location
-    protected @Nullable PointType location;
+    protected PointType location;
     // keeps track of the parsed counts
     //private int forecastHours = 24;
     private int forecastDays = 8;
@@ -453,6 +454,7 @@ public class DwdForecastHandler extends BaseThingHandler {
         triggerChannel(channelId, EVENT_START);
     }
 
+    @NonNullByDefault
     private final class Job {
         private final long delay;
         private final ScheduledFuture<?> future;
