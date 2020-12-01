@@ -65,10 +65,14 @@ public class ProductDefinition {
 
         @XStreamImplicit(itemFieldName = "TimeStep")
         private List<Date> timeStep;
-        
+     
+        public List<Date> getTimeStep() {
+            return this.timeStep;
+        }
+
     }
 
-    private class ReferencedModel {
+    public class ReferencedModel {
 
         @XStreamImplicit(itemFieldName = "Model")
         private List<Model> models;
@@ -79,7 +83,7 @@ public class ProductDefinition {
         
     }
 
-    private class Model {
+    public class Model {
     
         private String name;
 
@@ -94,7 +98,7 @@ public class ProductDefinition {
 
     }
     
-    private class FormatCfg {
+    public class FormatCfg {
 
         @XStreamAlias("DefaultUndefSign")
         private String defaultUndefSign;

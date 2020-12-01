@@ -32,7 +32,7 @@ public class Document {
         return this.placemark;
     }
 
-    private class Placemark {
+    public class Placemark {
 
         @XStreamAlias("name")
         private String name;
@@ -57,7 +57,7 @@ public class Document {
         }
     }
 
-    private class Point {
+    public class Point {
 
         @XStreamAlias("coordinates")
         private String coordinates;

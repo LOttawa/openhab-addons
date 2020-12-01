@@ -18,6 +18,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.text.MessageFormat;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -29,20 +33,25 @@ import javax.xml.namespace.QName;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.thoughtworks.xstream.XStream;
+import com.thoughtworks.xstream.converters.extended.ISO8601DateConverter;
 import com.thoughtworks.xstream.io.xml.QNameMap;
 import com.thoughtworks.xstream.io.xml.StaxDriver;
 
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.ContentResponse;
 import org.eclipse.smarthome.core.cache.ExpiringCacheMap;
+import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.PointType;
-import org.openhab.binding.dwdweatherforecast.internal.config.DwdForecastBridgeHandlerConfiguration;
 import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastBridgeHandler;
+import org.openhab.binding.dwdweatherforecast.internal.dto.DwdCurrentData;
 import org.openhab.binding.dwdweatherforecast.internal.dto.DwdWeatherData;
 import org.openhab.binding.dwdweatherforecast.internal.dto.MosmixStationsList;
 import org.openhab.binding.dwdweatherforecast.internal.dto.MosmixStationsList.StationDetails;
+import org.openhab.binding.dwdweatherforecast.internal.dto.xml.ExtendedData;
+import org.openhab.binding.dwdweatherforecast.internal.dto.xml.Forecast;
 import org.openhab.binding.dwdweatherforecast.internal.dto.xml.Kml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,86 +67,61 @@ public class DwdForecastConnection {
 
     private final Logger logger = LoggerFactory.getLogger(DwdForecastConnection.class);
 
-    private MosmixStationsList stations;
-
+    private @Nullable MosmixStationsList stations;
+    
     private final DwdForecastBridgeHandler handler;
     private final HttpClient httpClient;
 
     private final ExpiringCacheMap<String, String> cache;
+    private final Gson json;
 
     public static final String MOSMIX_STATIONS_LIST_URL = "https://www.dwd.de/DE/leistungen/met_verfahren_mosmix/mosmix_stationskatalog.cfg?view=nasPublication&nn=16102";
-    public static final String MOSMIX_STATION_WEATHER_FORECAST_DATA = "https://opendata.dwd.de/weather/local_forecasts/mos/MOSMIX_L/single_stations/${0}/kml/MOSMIX_L_LATEST_${0}.kmz";
+    public static final String MOSMIX_STATION_WEATHER_FORECAST_DATA = "https://opendata.dwd.de/weather/local_forecasts/mos/MOSMIX_L/single_stations/{0}/kml/MOSMIX_L_LATEST_{0}.kmz";
 
     public DwdForecastConnection(DwdForecastBridgeHandler handler, HttpClient httpClient) {
         this.httpClient = httpClient;
         this.handler = handler;
 
-        this.stations = new MosmixStationsList();
+        json = new Gson();
+        cache = new ExpiringCacheMap<>(
+                TimeUnit.HOURS.toMillis(this.handler.getDwdForecastBridgeConfiguration().refreshInterval));
 
-        DwdForecastBridgeHandlerConfiguration config = handler.getDwdForecastBridgeConfiguration();
-        this.cache = new ExpiringCacheMap<>(TimeUnit.HOURS.toMillis(config.refreshInterval));
+        stations = getMosmixStationsDataFromCache();
     }
 
-    public void getMosmixStationsData() {
+    @Nullable
+    public MosmixStationsList getMosmixStationsDataFromCache() {
         try {
-            getMosmixStationsDataFromCache();
+            String stationsData = cache.putIfAbsentAndGet(MOSMIX_STATIONS_LIST_URL,
+                    () -> getMosmixStationsData());
+
+            return json.fromJson(stationsData, MosmixStationsList.class);
+
         } catch (Exception ex) {
             logger.debug("Error while retrieving MOSMIX Stations from DWD site. Error: {}", ex.getLocalizedMessage());
+
+            return null;
         }
     }
 
-    public DwdWeatherData getWeatherData(PointType location)
+    public DwdWeatherData getWeatherDataFromCache(PointType location)
             throws JsonSyntaxException, RuntimeException, IllegalArgumentException {
         if (location == null) {
             throw new IllegalArgumentException("Location for DWD Weather Forecast is missing.");
         }
 
-        String mosmixStation = getNearestMosmixStation(location);
+        String mosmixStation = cache.putIfAbsentAndGet(location.toString(),
+                () -> getNearestMosmixStation(location));
 
-        String url = String.format(MOSMIX_STATION_WEATHER_FORECAST_DATA, mosmixStation);
+        String url = MessageFormat.format(MOSMIX_STATION_WEATHER_FORECAST_DATA, mosmixStation);
 
-        return getWeatherDataFromCache(url);
-
-    }
-
-    private DwdWeatherData getWeatherDataFromCache(String url) {
-
-        String content = cache.get(url);
-
-        if (content == null) {
+        String weatherData = cache.putIfAbsentAndGet(url, () -> {
             try {
-                ByteArrayInputStream response = getResponse(url);
+                Kml kml = getWeatherData(url);
 
-                ZipInputStream zipResponse = new ZipInputStream(response);
+                DwdWeatherData data = mapKmlToDwdWeatherData(kml);
 
-                zipResponse.getNextEntry();
-
-                ByteArrayOutputStream bArrayOutStream = new ByteArrayOutputStream();
-
-                IOUtils.copy(zipResponse, bArrayOutStream);
-
-                String strWeatherForecastData = new String(bArrayOutStream.toByteArray(), "ISO-8859-1");
-
-                final QNameMap qnameMap = new QNameMap();
-                qnameMap.setDefaultNamespace("http://www.opengis.net/kml/2.2");
-                qnameMap.setDefaultPrefix("kml");
-
-                qnameMap.registerMapping(new QName("http://www.opengis.net/kml/2.2", "kml", "kml"), Kml.class);
-
-                StaxDriver driver = new StaxDriver(qnameMap);
-
-                XStream xStream = new XStream(driver);
-                xStream.autodetectAnnotations(true);
-
-                Object kmlObject = xStream.fromXML(strWeatherForecastData);
-
-                Kml kml = (Kml) kmlObject;
-
-                Gson json = new Gson();
-
-                content = json.toJson(kml, Kml.class);
-
-                cache.putValue(url, content);
+                return json.toJson(data, DwdWeatherData.class);
 
             } catch (UnsupportedEncodingException ueex) {
                 logger.debug("Converting Weather Data from Byte to String with wrong encoding. Exception: {}",
@@ -145,54 +129,130 @@ public class DwdForecastConnection {
             } catch (IOException ioex) {
                 logger.debug(
                         "Exception while unzipping the response or copying it to byte array outputstream. Exception: {}",
-                                ioex.getLocalizedMessage());
+                        ioex.getLocalizedMessage());
             } catch (InterruptedException | TimeoutException | ExecutionException ex) {
-                logger.debug(
-                        "Exception while getting response from DWD web site. Exception: {}", ex.getLocalizedMessage());
+                logger.debug("Exception while getting response from DWD web site. Exception: {}",
+                        ex.getLocalizedMessage());
             }
-        }
 
-        return getDwdWeatherDataFromCacheContent(content);
+            return "ErrorGettingWeatherData";
+        });
+
+        if (weatherData.equals("ErrorGettingWeatherData")) {
+
+            return new DwdWeatherData();
+
+        } else {
+
+            return json.fromJson(weatherData, DwdWeatherData.class);
+        }
     }
 
-    private DwdWeatherData getDwdWeatherDataFromCacheContent(String content) {
-        return new DwdWeatherData();
-    }
+    private DwdWeatherData mapKmlToDwdWeatherData(Kml kml) {
 
-    private MosmixStationsList getMosmixStationsDataFromCache() {
+        DwdWeatherData dwdData = new DwdWeatherData();
+        DwdCurrentData currData = new DwdCurrentData();
 
-        Gson gson = new Gson();
+        List<Date> forecastTimestamps = kml.getDocument().getExtendedData().getProductDefinition().getForecastTimeSteps().getTimeStep();
+        List<Forecast> forecastData = kml.getDocument().getPlacemark().getExtendedData().getForecast();
 
-        String content = cache.get(MOSMIX_STATIONS_LIST_URL);
-
-        if (content == null) {
-            try {
-
-
-                ByteArrayInputStream stream = getResponse(MOSMIX_STATIONS_LIST_URL);
-
-                content = gson.toJson(convertMosmixStationsDataToObject(stream));
-
-                cache.putValue(MOSMIX_STATIONS_LIST_URL, content);
-
-            } catch (InterruptedException | TimeoutException | ExecutionException | IOException ex) {
-
+        boolean notfound = true;
+        Iterator<Forecast> iter = forecastData.iterator();
+        String value = "";
+        while (iter.hasNext() && notfound) {
+            Forecast data = iter.next();
+            if (data.getElementName().equals("TTT")) {
+                notfound = false;
+                value = data.getValue();
             }
         }
+        String[] values = value.replaceAll("\\s{2,}", " ").trim().split("\\s+");
+
+        double currTemperature = Double.parseDouble(values[0]) - 273.15;
+        currData.setTemperature(currTemperature);
+        int currTimestamp = (int) (forecastTimestamps.get(0).getTime() / 1000);
+        currData.setTimestamp(currTimestamp);
+
+        dwdData.setCurrentData(currData);
+
+        return dwdData;
+    }
+
+    private Kml getWeatherData(String url) throws UnsupportedEncodingException, IOException,
+            InterruptedException, TimeoutException, ExecutionException {
+
+        ByteArrayInputStream response = getResponse(url);
+
+        ZipInputStream zipResponse = new ZipInputStream(response);
+
+        zipResponse.getNextEntry();
+
+        ByteArrayOutputStream bArrayOutStream = new ByteArrayOutputStream();
+
+        IOUtils.copy(zipResponse, bArrayOutStream);
+
+        String strWeatherForecastData = new String(bArrayOutStream.toByteArray(), "ISO-8859-1");
+
+        final QNameMap qnameMap = new QNameMap();
+        qnameMap.setDefaultNamespace("http://www.opengis.net/kml/2.2");
+        qnameMap.setDefaultPrefix("kml");
+        qnameMap.registerMapping(new QName("http://www.opengis.net/kml/2.2", "kml", "kml"), Kml.class);
+
+        StaxDriver driver = new StaxDriver(qnameMap);
+
+        XStream xStream = new XStream(driver);
+        xStream.setClassLoader(this.getClass().getClassLoader());
+        xStream.registerConverter(new ISO8601DateConverter());
+        xStream.autodetectAnnotations(true);
+        // xStream.alias("kml", Kml.class);
+
+        return (Kml) xStream.fromXML(strWeatherForecastData, new Kml());
         
-        return gson.fromJson(content, MosmixStationsList.class);
+    }
+
+    @Nullable
+    private String getMosmixStationsData() {
+
+        try {
+
+            ByteArrayInputStream stream = getResponse(MOSMIX_STATIONS_LIST_URL);
+
+            return json.toJson(convertMosmixStationsDataToObject(stream));
+
+        } catch (InterruptedException | TimeoutException | ExecutionException | IOException ex) {
+            return null;
+        }
     }
 
     private String getNearestMosmixStation(PointType location) {
 
-        // Map<String, Object> values = new HashMap<String, Object>();
-        // values.put("0", this.nextStation.getId());
+        StationDetails nextStation = new MosmixStationsList().new StationDetails();
 
-        // String urlString = StringUtils.format(DWDLocalWeatherConstants.MOSMIX_STATION_WEATHER_FORECAST_DATA, values);
+        if (this.stations.getMosmixStationsCounter() > 0) {
 
-        return "";
+            Vector<StationDetails> stations = this.stations.getStationDetails();
+            Iterator<StationDetails> iter = stations.iterator();
+            StationDetails station;
+            double smallestDistance = 15000000;
+
+            while (iter.hasNext()) {
+                station = iter.next();
+
+                DecimalType distance = location.distanceFrom(
+                        new PointType(new DecimalType(station.getNb()), new DecimalType(station.getEl())));
+
+                if (distance.doubleValue() < smallestDistance) {
+                    smallestDistance = distance.doubleValue();
+                    nextStation = station;
+                }
+            }
+        }
+        
+        return nextStation.getId();
+
     }
 
+    @Nullable
     private MosmixStationsList convertMosmixStationsDataToObject(ByteArrayInputStream stream)
             throws UnsupportedEncodingException, IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(stream, "ISO-8859-1"));
@@ -233,17 +293,17 @@ public class DwdForecastConnection {
     }
 
     public int getMosmixStationsCounter() {
-        return this.stations.getMosmixStationsCounter();
+        return stations.getMosmixStationsCounter();
     }
 
     public Vector<StationDetails> getMosmixStationDetails() {
-        return this.stations.getStationDetails();
+        return stations.getStationDetails();
     }
 
     private ByteArrayInputStream getResponse(String urlString)
             throws InterruptedException, TimeoutException, ExecutionException {
 
-        ContentResponse response = this.httpClient.newRequest(urlString).timeout(10, TimeUnit.SECONDS).send();
+        ContentResponse response = httpClient.newRequest(urlString).timeout(10, TimeUnit.SECONDS).send();
 
         return new ByteArrayInputStream(response.getContent());
     }

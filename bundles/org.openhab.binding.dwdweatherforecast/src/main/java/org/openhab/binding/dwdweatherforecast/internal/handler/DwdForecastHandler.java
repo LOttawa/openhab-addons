@@ -12,8 +12,17 @@
  */
 package org.openhab.binding.dwdweatherforecast.internal.handler;
 
-import static org.eclipse.smarthome.core.library.unit.SIUnits.*;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.*;
+import static org.eclipse.smarthome.core.library.unit.SIUnits.CELSIUS;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_GROUP_CURRENT_WEATHER;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_GROUP_FORECAST_TODAY;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_GROUP_FORECAST_TOMORROW;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_GROUP_TYPE_DAILY_FORECAST;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_MAX_TEMPERATURE;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_MIN_TEMPERATURE;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_TEMPERATURE;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_TIME_STAMP;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.EVENT_START;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.THING_TYPE_DWD_LOCAL_FORECAST;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -34,7 +43,6 @@ import javax.measure.Unit;
 
 import com.google.gson.JsonSyntaxException;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DateTimeType;
@@ -102,6 +110,8 @@ public class DwdForecastHandler extends BaseThingHandler {
 
     public DwdForecastHandler(Thing thing) {
         super(thing);
+
+        this.location = new PointType();
     }
 
     @Override
@@ -122,7 +132,7 @@ public class DwdForecastHandler extends BaseThingHandler {
             logger.warn("Error parsing 'location' parameter: {}", e.getMessage());
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "@text/offline.conf-error-parsing-location");
-            this.location = null;
+            this.location = new PointType();
             configValid = false;
         }
 
@@ -247,16 +257,18 @@ public class DwdForecastHandler extends BaseThingHandler {
      *
      * @param connection {@link DwdForecastConnection} instance
      */
-    public void updateData(DwdForecastConnection connection) {
-        try {
-            if (requestData(connection)) {
-                updateChannels();
-                updateStatus(ThingStatus.ONLINE);
+    public void updateData(@Nullable DwdForecastConnection connection) {
+        if (connection != null) {
+            try {
+                if (requestData(connection)) {
+                    updateChannels();
+                    updateStatus(ThingStatus.ONLINE);
+                }
+            } catch (RuntimeException e) {
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getLocalizedMessage());
+//            } catch (IllegalArgumentException e) {
+//                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, e.getLocalizedMessage());
             }
-        } catch (RuntimeException e) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getLocalizedMessage());
-//        } catch (IllegalArgumentException e) {
-//            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, e.getLocalizedMessage());
         }
     }
 
@@ -272,7 +284,7 @@ public class DwdForecastHandler extends BaseThingHandler {
             throws RuntimeException, IllegalArgumentException {
         logger.debug("Update weather and forecast data of thing '{}'.", getThing().getUID());
         try {
-            this.weatherData = connection.getWeatherData(this.location);
+            this.weatherData = connection.getWeatherDataFromCache(this.location);
             return true;
         } catch (JsonSyntaxException e) {
             logger.debug("JsonSyntaxException occurred during execution: {}", e.getLocalizedMessage(), e);

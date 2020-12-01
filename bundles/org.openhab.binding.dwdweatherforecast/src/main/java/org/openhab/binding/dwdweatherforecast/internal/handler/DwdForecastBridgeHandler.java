@@ -62,12 +62,13 @@ public class DwdForecastBridgeHandler extends BaseBridgeHandler {
     public DwdForecastBridgeHandler(Bridge bridge, HttpClient httpClient) {
         super(bridge);
         this.httpClient = httpClient;
+
+        this.config = getConfigAs(DwdForecastBridgeHandlerConfiguration.class);
     }
 
     @Override
     public void initialize() {
         logger.debug("Start initializing DWD Weather Forecast Bridge handler '{}'.", getThing().getUID());
-        config = getConfigAs(DwdForecastBridgeHandlerConfiguration.class);
 
         boolean validConfig = true;
 
@@ -152,7 +153,7 @@ public class DwdForecastBridgeHandler extends BaseBridgeHandler {
 
     private ThingStatus updateThing(DwdForecastHandler handler, Thing thing) {
         if (handler != null && connection != null) {
-            //handler.updateData(connection);
+            handler.updateData(connection);
             return thing.getStatus();
         } else {
             logger.debug("Cannot update weather data of thing '{}' as location handler is null.", thing.getUID());
