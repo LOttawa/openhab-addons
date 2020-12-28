@@ -14,6 +14,7 @@ package org.openhab.binding.dwdweatherforecast.internal.discovery;
 
 import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.*;
 
+import java.util.Collections;
 import java.util.Vector;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -48,7 +49,7 @@ public class DwdForecastDiscoveryService extends AbstractDiscoveryService {
     private @Nullable ScheduledFuture<?> discoveryJob;
     private final LocationProvider locationProvider;
     private final DwdForecastBridgeHandler bridgeHandler;
-    private @Nullable Vector<PointType> currentLocations;
+    private Vector<PointType> currentLocations;
 
     public DwdForecastDiscoveryService(DwdForecastBridgeHandler bridgeHandler, LocationProvider locationProvider,
             LocaleProvider localeProvider, TranslationProvider i18nProvider) {
@@ -57,6 +58,7 @@ public class DwdForecastDiscoveryService extends AbstractDiscoveryService {
         this.i18nProvider = i18nProvider;
         this.localeProvider = localeProvider;
         this.locationProvider = locationProvider;
+        currentLocations = new Vector<PointType>();
 
         activate(null);
     }
@@ -104,8 +106,9 @@ public class DwdForecastDiscoveryService extends AbstractDiscoveryService {
 
         if (newLocation == null) {
             logger.debug("No Location given. No Discovery results will be determined.");
-        } else if (!currentLocations.contains(newLocation)) {
+        } else if (currentLocations.size() == 0 || !currentLocations.contains(newLocation)) {
             createResults(newLocation);
+            currentLocations.add(newLocation);
         } else {
             logger.debug("Location already in Results, therefore no new results will created");
         }
@@ -113,7 +116,10 @@ public class DwdForecastDiscoveryService extends AbstractDiscoveryService {
 
     private void createResults(PointType location) {
         String locationString = location.toFullString();
-        String locationIndex = String.valueOf(currentLocations.indexOf(location));
+        String locationIndex = "loc";
+
+        int counter = currentLocations.size();
+        locationIndex = locationIndex.concat(String.valueOf(counter + 1));
         ThingUID bridgeUID = this.bridgeHandler.getThing().getUID();
         createDwdLocaleWeatherForecastResult(bridgeUID, locationString, locationIndex);
     }

@@ -12,17 +12,9 @@
  */
 package org.openhab.binding.dwdweatherforecast.internal.handler;
 
-import static org.eclipse.smarthome.core.library.unit.SIUnits.CELSIUS;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_GROUP_CURRENT_WEATHER;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_GROUP_FORECAST_TODAY;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_GROUP_FORECAST_TOMORROW;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_GROUP_TYPE_DAILY_FORECAST;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_MAX_TEMPERATURE;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_MIN_TEMPERATURE;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_TEMPERATURE;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.CHANNEL_TIME_STAMP;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.EVENT_START;
-import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.THING_TYPE_DWD_LOCAL_FORECAST;
+import static org.eclipse.smarthome.core.library.unit.SIUnits.*;
+import static org.eclipse.smarthome.core.library.unit.SmartHomeUnits.*;
+import static org.openhab.binding.dwdweatherforecast.internal.DwdForecastBindingConstants.*;
 
 import java.time.Instant;
 import java.time.ZoneId;
@@ -48,6 +40,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.smarthome.core.library.types.DateTimeType;
 import org.eclipse.smarthome.core.library.types.PointType;
 import org.eclipse.smarthome.core.library.types.QuantityType;
+import org.eclipse.smarthome.core.library.types.StringType;
 import org.eclipse.smarthome.core.thing.Channel;
 import org.eclipse.smarthome.core.thing.ChannelGroupUID;
 import org.eclipse.smarthome.core.thing.ChannelUID;
@@ -88,15 +81,8 @@ public class DwdForecastHandler extends BaseThingHandler {
     // keeps track of all jobs
     private static final Map<String, Job> JOBS = new ConcurrentHashMap<>();
 
-    // keeps track of the parsed location
     protected PointType location;
-    // keeps track of the parsed counts
-    //private int forecastHours = 24;
     private int forecastDays = 8;
-    //private int numberOfAlerts = 0;
-
-    // private @Nullable DarkSkyChannelConfiguration sunriseTriggerChannelConfig;
-    // private @Nullable DarkSkyChannelConfiguration sunsetTriggerChannelConfig;
 
     public static final Set<ThingTypeUID> SUPPORTED_THING_TYPES = Collections.singleton(THING_TYPE_DWD_LOCAL_FORECAST);
 
@@ -137,7 +123,7 @@ public class DwdForecastHandler extends BaseThingHandler {
         }
 
         int newForecastDays = config.forecastDays;
-        if (newForecastDays < 0 || newForecastDays > 8) {
+        if (newForecastDays < 0 || newForecastDays > 10) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                     "@text/offline.conf-error-not-supported-number-of-days");
             configValid = false;
@@ -152,9 +138,6 @@ public class DwdForecastHandler extends BaseThingHandler {
                 logger.debug("Rebuilding daily forecast channel groups.");
                 if (forecastDays > newForecastDays) {
                     if (newForecastDays < 1) {
-                        toBeRemovedChannels.addAll(removeChannelsOfGroup(CHANNEL_GROUP_FORECAST_TODAY));
-                    }
-                    if (newForecastDays < 2) {
                         toBeRemovedChannels.addAll(removeChannelsOfGroup(CHANNEL_GROUP_FORECAST_TOMORROW));
                     }
                     for (int i = newForecastDays; i < forecastDays; ++i) {
@@ -163,14 +146,10 @@ public class DwdForecastHandler extends BaseThingHandler {
                     }
                 } else {
                     if (forecastDays == 0 && newForecastDays > 0) {
-                        toBeAddedChannels.addAll(createChannelsForGroup(CHANNEL_GROUP_FORECAST_TODAY,
-                                CHANNEL_GROUP_TYPE_DAILY_FORECAST));
-                    }
-                    if (forecastDays <= 1 && newForecastDays > 1) {
                         toBeAddedChannels.addAll(createChannelsForGroup(CHANNEL_GROUP_FORECAST_TOMORROW,
                                 CHANNEL_GROUP_TYPE_DAILY_FORECAST));
                     }
-                    for (int i = (forecastDays < 2) ? 2 : forecastDays; i < newForecastDays; ++i) {
+                    for (int i = (forecastDays < 1) ? 1 : forecastDays; i < newForecastDays; ++i) {
                         toBeAddedChannels.addAll(
                                 createChannelsForGroup(CHANNEL_GROUP_DAILY_FORECAST_PREFIX + Integer.toString(i),
                                         CHANNEL_GROUP_TYPE_DAILY_FORECAST));
@@ -317,18 +296,15 @@ public class DwdForecastHandler extends BaseThingHandler {
             case CHANNEL_GROUP_CURRENT_WEATHER:
                 updateCurrentChannel(channelUID);
                 break;
-            case CHANNEL_GROUP_FORECAST_TODAY:
-                updateDailyForecastChannel(channelUID, 0);
-                break;
             case CHANNEL_GROUP_FORECAST_TOMORROW:
-                updateDailyForecastChannel(channelUID, 1);
+                updateDailyForecastChannel(channelUID, 0);
                 break;
             default:
                 int i;
 
                 Matcher dailyForecastMatcher = CHANNEL_GROUP_DAILY_FORECAST_PREFIX_PATTERN.matcher(channelGroupId);
-                if (dailyForecastMatcher.find() && (i = Integer.parseInt(dailyForecastMatcher.group(1))) > 1
-                        && i <= 8) {
+                if (dailyForecastMatcher.find() && (i = Integer.parseInt(dailyForecastMatcher.group(1))) > 0
+                        && i <= 9) {
                     updateDailyForecastChannel(channelUID, i);
                     break;
                 }
@@ -353,7 +329,31 @@ public class DwdForecastHandler extends BaseThingHandler {
                     state = getDateTimeTypeState(currentData.getTimestamp());
                     break;
                 case CHANNEL_TEMPERATURE:
-                    state = getQuantityTypeState(currentData.getTemperature(), CELSIUS);
+                    state = getQuantityTypeState(currentData.getTemperature(), KELVIN);
+                    break;
+                    case CHANNEL_WIND_DIRECTION:
+                    state = getQuantityTypeState(currentData.getWindDirection(), DEGREE_ANGLE);
+                    break;
+                case CHANNEL_WIND_SPEED:
+                    state = getQuantityTypeState(currentData.getWindSpeed(), METRE_PER_SECOND);
+                    break;
+                case CHANNEL_GUST_SPEED:
+                    state = getQuantityTypeState(currentData.getGustSpeed(), METRE_PER_SECOND);
+                    break;
+                case CHANNEL_PRESSURE:
+                    state = getQuantityTypeState(currentData.getPressure(), PASCAL);
+                    break;
+                case CHANNEL_VISIBILITY:
+                    state = getQuantityTypeState(currentData.getVisibility(), METRE);
+                    break;
+                case CHANNEL_PRECIPITATION:
+                    state = getQuantityTypeState(currentData.getPrecipitation(), MILLIMETRE_PER_HOUR);
+                    break;
+                case CHANNEL_CLOUD_COVER:
+                    state = getQuantityTypeState(currentData.getCloudCover(), PERCENT);
+                    break;
+                case CHANNEL_SIGNIFICANT_WEATHER:
+                    state = getStringTypeState(currentData.getSignificantWeather());
                     break;
             }
             logger.debug("Update channel '{}' of group '{}' with new state '{}'.", channelId, channelGroupId, state);
@@ -381,12 +381,35 @@ public class DwdForecastHandler extends BaseThingHandler {
                     state = getDateTimeTypeState(forecastData.getTimestamp());
                     break;
                 case CHANNEL_MIN_TEMPERATURE:
-                    state = getQuantityTypeState(forecastData.getMinTemperature(), CELSIUS);
+                    state = getQuantityTypeState(forecastData.getDayForecast().getMinTemperature(), KELVIN);
                     break;
                 case CHANNEL_MAX_TEMPERATURE:
-                    state = getQuantityTypeState(forecastData.getMaxTemperature(), CELSIUS);
+                    state = getQuantityTypeState(forecastData.getDayForecast().getMaxTemperature(), KELVIN);
                     break;
-
+                case CHANNEL_WIND_DIRECTION:
+                    state = getQuantityTypeState(forecastData.getDayForecast().getWindDirection(), DEGREE_ANGLE);
+                    break;
+                case CHANNEL_WIND_SPEED:
+                    state = getQuantityTypeState(forecastData.getDayForecast().getWindSpeed(), METRE_PER_SECOND);
+                    break;
+                case CHANNEL_GUST_SPEED:
+                    state = getQuantityTypeState(forecastData.getDayForecast().getGustSpeed(), METRE_PER_SECOND);
+                    break;
+                case CHANNEL_PRESSURE:
+                    state = getQuantityTypeState(forecastData.getDayForecast().getPressure(), PASCAL);
+                    break;
+                case CHANNEL_VISIBILITY:
+                    state = getQuantityTypeState(forecastData.getDayForecast().getVisibility(), METRE);
+                    break;
+                case CHANNEL_PRECIPITATION:
+                    state = getQuantityTypeState(forecastData.getDayForecast().getPrecipitation(), MILLIMETRE_PER_HOUR);
+                    break;
+                case CHANNEL_CLOUD_COVER:
+                    state = getQuantityTypeState(forecastData.getDayForecast().getCloudCover(), PERCENT);
+                    break;
+                case CHANNEL_SIGNIFICANT_WEATHER:
+                    state = getStringTypeState(forecastData.getDayForecast().getSignificantWeather());
+                    break;
             }
             logger.debug("Update channel '{}' of group '{}' with new state '{}'.", channelId, channelGroupId, state);
             updateState(channelUID, state);
@@ -395,12 +418,16 @@ public class DwdForecastHandler extends BaseThingHandler {
         }
     }
 
-    private State getDateTimeTypeState(int value) {
-        return new DateTimeType(ZonedDateTime.ofInstant(Instant.ofEpochSecond(value), ZoneId.systemDefault()));
+    private State getDateTimeTypeState(long value) {
+        return new DateTimeType(ZonedDateTime.ofInstant(Instant.ofEpochMilli(value), ZoneId.systemDefault()));
     }
 
     private State getQuantityTypeState(double value, Unit<?> unit) {
         return new QuantityType<>(value, unit);
+    }
+
+    private State getStringTypeState(@Nullable String value) {
+        return (value == null) ? UnDefType.UNDEF : new StringType(value);
     }
 
     /**

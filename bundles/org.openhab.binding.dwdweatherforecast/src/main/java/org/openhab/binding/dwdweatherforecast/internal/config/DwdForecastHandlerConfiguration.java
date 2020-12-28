@@ -25,6 +25,7 @@ import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastHandle
 public class DwdForecastHandlerConfiguration {
     
     public @NonNullByDefault({}) String location;
+    public int refreshInterval = 1;
     public int forecastDays;
 
 }

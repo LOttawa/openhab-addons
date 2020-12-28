@@ -19,9 +19,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.text.MessageFormat;
-import java.util.Date;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Vector;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -46,12 +44,10 @@ import org.eclipse.smarthome.core.cache.ExpiringCacheMap;
 import org.eclipse.smarthome.core.library.types.DecimalType;
 import org.eclipse.smarthome.core.library.types.PointType;
 import org.openhab.binding.dwdweatherforecast.internal.handler.DwdForecastBridgeHandler;
-import org.openhab.binding.dwdweatherforecast.internal.dto.DwdCurrentData;
 import org.openhab.binding.dwdweatherforecast.internal.dto.DwdWeatherData;
 import org.openhab.binding.dwdweatherforecast.internal.dto.MosmixStationsList;
 import org.openhab.binding.dwdweatherforecast.internal.dto.MosmixStationsList.StationDetails;
-import org.openhab.binding.dwdweatherforecast.internal.dto.xml.ExtendedData;
-import org.openhab.binding.dwdweatherforecast.internal.dto.xml.Forecast;
+import org.openhab.binding.dwdweatherforecast.internal.dto.converter.KmlToDwdWeatherDataConverter;
 import org.openhab.binding.dwdweatherforecast.internal.dto.xml.Kml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,9 +115,9 @@ public class DwdForecastConnection {
             try {
                 Kml kml = getWeatherData(url);
 
-                DwdWeatherData data = mapKmlToDwdWeatherData(kml);
+                KmlToDwdWeatherDataConverter converter = new KmlToDwdWeatherDataConverter(kml);
 
-                return json.toJson(data, DwdWeatherData.class);
+                return json.toJson(converter.convert(), DwdWeatherData.class);
 
             } catch (UnsupportedEncodingException ueex) {
                 logger.debug("Converting Weather Data from Byte to String with wrong encoding. Exception: {}",
@@ -146,36 +142,6 @@ public class DwdForecastConnection {
 
             return json.fromJson(weatherData, DwdWeatherData.class);
         }
-    }
-
-    private DwdWeatherData mapKmlToDwdWeatherData(Kml kml) {
-
-        DwdWeatherData dwdData = new DwdWeatherData();
-        DwdCurrentData currData = new DwdCurrentData();
-
-        List<Date> forecastTimestamps = kml.getDocument().getExtendedData().getProductDefinition().getForecastTimeSteps().getTimeStep();
-        List<Forecast> forecastData = kml.getDocument().getPlacemark().getExtendedData().getForecast();
-
-        boolean notfound = true;
-        Iterator<Forecast> iter = forecastData.iterator();
-        String value = "";
-        while (iter.hasNext() && notfound) {
-            Forecast data = iter.next();
-            if (data.getElementName().equals("TTT")) {
-                notfound = false;
-                value = data.getValue();
-            }
-        }
-        String[] values = value.replaceAll("\\s{2,}", " ").trim().split("\\s+");
-
-        double currTemperature = Double.parseDouble(values[0]) - 273.15;
-        currData.setTemperature(currTemperature);
-        int currTimestamp = (int) (forecastTimestamps.get(0).getTime() / 1000);
-        currData.setTimestamp(currTimestamp);
-
-        dwdData.setCurrentData(currData);
-
-        return dwdData;
     }
 
     private Kml getWeatherData(String url) throws UnsupportedEncodingException, IOException,

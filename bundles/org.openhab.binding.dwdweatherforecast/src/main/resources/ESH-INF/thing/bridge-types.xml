@@ -4,10 +4,12 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- Bridge of the DWD Weather Forecast Binding -->
+	<!-- Bridge of the Deutsche Wetterdienst (DWD) Weather Forecast Binding -->
 	<bridge-type id="dwd-weather-forecast-bridge">
 		<label>DWD Weather Forecast Opendata Bridge</label>
-		<description>This bridge the DWD OpenData page and reads the MOSMIX Stations list. This is required to determine the nearest DWD weather station of your location.</description>
+		<description>This bridge uses the Deutsche Wetterdienst (DWD) OpenData page and reads the MOSMIX Stations list. The MOSMIX Stations list contains all weather stations
+			which exists and forecast data is available. The list is required to determine the nearest DWD weather station of your location. All information provided by the DWD
+			is protected by copyright. Find the terms of use under: https://www.dwd.de/copyright.</description>
 
 		<representation-property>refreshInterval</representation-property>
 

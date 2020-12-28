@@ -18,14 +18,23 @@ package org.openhab.binding.dwdweatherforecast.internal.dto;
  */
 public class DwdCurrentData {
 
-    private int timestamp;
+    private long timestamp;
     private double temperature;
+    private double windDirection;
+    private double windSpeed;
+    private double gustSpeed;
+    private double pressure;
+    private long visibility;
+    private double precipitation;
+    private int cloudCover;
+    private String significantWeather;
+    private String swIcon;
 
-    public int getTimestamp() {
+    public long getTimestamp() {
         return this.timestamp;
     }
 
-    public void setTimestamp(int timestamp) {
+    public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
     }
 
@@ -35,5 +44,77 @@ public class DwdCurrentData {
 
     public void setTemperature(double temperature) {
         this.temperature = temperature;
+    }
+
+    public double getWindDirection() {
+        return windDirection;
+    }
+
+    public void setWindDirection(double windDirection) {
+        this.windDirection = windDirection;
+    }
+
+    public double getWindSpeed() {
+        return windSpeed;
+    }
+
+    public void setWindSpeed(double windSpeed) {
+        this.windSpeed = windSpeed;
+    }
+
+    public double getGustSpeed() {
+        return gustSpeed;
+    }
+
+    public void setGustSpeed(double gustSpeed) {
+        this.gustSpeed = gustSpeed;
+    }
+    
+    public double getPressure() {
+        return pressure;
+    }
+
+    public void setPressure(double pressure) {
+        this.pressure = pressure;
+    }
+
+    public long getVisibility() {
+        return visibility;
+    }
+
+    public void setVisibility(long visibility) {
+        this.visibility = visibility;
+    }
+
+    public double getPrecipitation() {
+        return precipitation;
+    }
+
+    public void setPrecipitation(double precipitation) {
+        this.precipitation = precipitation;
+    }
+
+    public int getCloudCover() {
+        return cloudCover;
+    }
+
+    public void setCloudCover(int cloudCover) {
+        this.cloudCover = cloudCover;
+    }
+
+    public String getSignificantWeather() {
+        return significantWeather;
+    }
+
+    public void setSignificantWeather(String significantWeather) {
+        this.significantWeather = significantWeather;
+    }
+
+    public String getSWIcon() {
+        return swIcon;
+    }
+
+    public void setSWIcon(String swIcon) {
+        this.swIcon = swIcon;
     }
 }

@@ -40,7 +40,6 @@ public class DwdForecastBindingConstants {
 
     // List of all channel groups
     public static final String CHANNEL_GROUP_CURRENT_WEATHER = "current";
-    public static final String CHANNEL_GROUP_FORECAST_TODAY = "forecastToday";
     public static final String CHANNEL_GROUP_FORECAST_TOMORROW = "forecastTomorrow";
 
     // List of all Channels
@@ -48,6 +47,15 @@ public class DwdForecastBindingConstants {
     public static final String CHANNEL_TEMPERATURE = "temperature";
     public static final String CHANNEL_MAX_TEMPERATURE = "max-temperature";
     public static final String CHANNEL_MIN_TEMPERATURE = "min-temperature";
+    public static final String CHANNEL_WIND_DIRECTION = "wind-direction";
+    public static final String CHANNEL_WIND_SPEED = "wind-speed";
+    public static final String CHANNEL_GUST_SPEED = "gust-speed";
+    public static final String CHANNEL_PRESSURE = "pressure";
+    public static final String CHANNEL_VISIBILITY = "visibility";
+    public static final String CHANNEL_PRECIPITATION = "precipitation";
+    public static final String CHANNEL_CLOUD_COVER = "cloud-cover";
+    public static final String CHANNEL_SIGNIFICANT_WEATHER = "significant-weather";
+    public static final String CHANNEL_SW_ICON = "sw-icon";
 
     public static final String EVENT_START = "START";
 }

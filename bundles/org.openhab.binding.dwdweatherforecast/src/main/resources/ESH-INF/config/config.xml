@@ -4,7 +4,7 @@
 	xmlns:config-description="https://openhab.org/schemas/config-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/config-description/v1.0.0 https://openhab.org/schemas/config-description-1.0.0.xsd">
 
-	<!-- Config for Dark Sky Binding -->
+	<!-- Config for the Deutsche Wetterdienst (DWD) Weather Forecast Binding -->
 	<config-description uri="bridge-type:dwd:weather-forecast-bridge">
 
 		<parameter name="refreshInterval" type="integer" min="1" unit="h">
@@ -21,6 +21,11 @@
 			<context>location</context>
 			<label>Location of Weather</label>
 			<description>Location of weather in geographical coordinates (latitude/longitude/altitude).</description>
+		</parameter>
+		<parameter name="refreshInterval" type="integer" min="1" unit="h">
+			<label>Refresh Interval</label>
+			<description>Specifies the refresh interval (in hours).</description>
+			<default>1</default>
 		</parameter>
 		<parameter name="forecastDays" type="integer" min="0" max="10" step="1">
 			<label>Number of Days</label>

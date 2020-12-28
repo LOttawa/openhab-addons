@@ -4,7 +4,7 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- Thing Type for the DWD Weather Forecast Binding -->
+	<!-- Thing Type for the Deutsche Wetterdiesnt (DWD) Weather Forecast Binding -->
 	<thing-type id="local-forecast">
 
 		<supported-bridge-type-refs>
@@ -16,37 +16,45 @@
 
 		<channel-groups>
 			<channel-group id="current" typeId="current"/>
-			<channel-group id="forecastToday" typeId="dailyForecast">
-				<label>Todays Forecast</label>
-				<description>This is the weather forecast for today.</description>
-			</channel-group>
 			<channel-group id="forecastTomorrow" typeId="dailyForecast">
 				<label>Tomorrows Forecast</label>
 				<description>This is the weather forecast for tomorrow.</description>
 			</channel-group>
-			<channel-group id="forecastDay2" typeId="dailyForecast">
+			<channel-group id="forecastDay1" typeId="dailyForecast">
 				<label>2 Day Forecast</label>
 				<description>This is the weather forecast in two days.</description>
 			</channel-group>
-			<channel-group id="forecastDay3" typeId="dailyForecast">
+			<channel-group id="forecastDay2" typeId="dailyForecast">
 				<label>3 Day Forecast</label>
 				<description>This is the weather forecast in three days.</description>
 			</channel-group>
-			<channel-group id="forecastDay4" typeId="dailyForecast">
+			<channel-group id="forecastDay3" typeId="dailyForecast">
 				<label>4 Day Forecast</label>
 				<description>This is the weather forecast in four days.</description>
 			</channel-group>
-			<channel-group id="forecastDay5" typeId="dailyForecast">
+			<channel-group id="forecastDay4" typeId="dailyForecast">
 				<label>5 Day Forecast</label>
 				<description>This is the weather forecast in five days.</description>
 			</channel-group>
-			<channel-group id="forecastDay6" typeId="dailyForecast">
+			<channel-group id="forecastDay5" typeId="dailyForecast">
 				<label>6 Day Forecast</label>
 				<description>This is the weather forecast in six days.</description>
 			</channel-group>
-			<channel-group id="forecastDay7" typeId="dailyForecast">
+			<channel-group id="forecastDay6" typeId="dailyForecast">
 				<label>7 Day Forecast</label>
 				<description>This is the weather forecast in seven days.</description>
+			</channel-group>
+			<channel-group id="forecastDay7" typeId="dailyForecast">
+				<label>8 Day Forecast</label>
+				<description>This is the weather forecast in eight days.</description>
+			</channel-group>
+			<channel-group id="forecastDay8" typeId="dailyForecast">
+				<label>9 Day Forecast</label>
+				<description>This is the weather forecast in nine days.</description>
+			</channel-group>
+			<channel-group id="forecastDay9" typeId="dailyForecast">
+				<label>10 Day Forecast</label>
+				<description>This is the weather forecast in ten days.</description>
 			</channel-group>
 		</channel-groups>
 

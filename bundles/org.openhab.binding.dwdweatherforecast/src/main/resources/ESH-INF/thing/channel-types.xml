@@ -4,13 +4,22 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- Channel groups for the DWD Weather Forecast Binding -->
+	<!-- Channel groups for the Deutsche Wetterdienst (DWD) Weather Forecast Binding -->
 	<channel-group-type id="current">
-		<label>Current Weather</label>
-		<description>This is the current weather.</description>
+		<label>Weather Forecast (Next full hour)</label>
+		<description>This is the weather forecast at the next full hour.</description>
 		<channels>
-			<channel id="time-stamp" typeId="time-stamp"/>
-			<channel id="temperature" typeId="system.outdoor-temperature"/>
+			<channel id="time-stamp" typeId="time-stamp"/> 									<!-- Timestamp of the next full hour -->
+			<channel id="temperature" typeId="system.outdoor-temperature"/>					<!-- MOSMIX Dataline: TTT -->
+			<channel id="wind-direction" typeId="system.wind-direction"/>					<!-- MOSMIX Dataline: DD -->
+			<channel id="wind-speed" typeId="system.wind-speed"/>							<!-- MOSMIX Dataline: FF -->
+			<channel id="gust-speed" typeId="gust-speed"/>									<!-- MOSMIX Dataline: FX1 -->
+			<channel id="pressure" typeId="system.barometric-pressure"/>					<!-- MOSMIX Dataline: PPPP -->
+			<channel id="visibility" typeId="visibility"/>									<!-- MOSMIX Dataline: VV -->
+			<channel id="precipitation" typeId="total-precipitation"/>						<!-- MOSMIX Dataline: RR1c -->
+			<channel id="cloud-cover" typeId="cloud-cover"/>								<!-- MOSMIX Dataline: Neff -->
+			<channel id="significant-weather" typeId="significant-weather"/>				<!-- MOSMIX Dataline: ww -->
+			<channel id="sw-icon" typeId="sw-icon"/>										<!-- Icon based on significant weather -->
 		</channels>
 	</channel-group-type>
 
@@ -18,17 +27,26 @@
 		<label>Daily Forecast</label>
 		<description>This is the 10 day / daily weather forecast.</description>
 		<channels>
-			<channel id="time-stamp" typeId="daily-forecast-time-stamp"/>
-			<channel id="min-temperature" typeId="forecasted-min-outdoor-temperature"/>
-			<channel id="max-temperature" typeId="forecasted-max-outdoor-temperature"/>
+			<channel id="time-stamp" typeId="daily-forecast-time-stamp"/>					<!-- Date of the daily forecast -->
+			<channel id="min-temperature" typeId="forecasted-min-temperature"/>				<!-- MOSMIX Dataline: TN -->
+			<channel id="max-temperature" typeId="forecasted-max-temperature"/>				<!-- MOSMIX Dataline: TX -->
+			<channel id="wind-direction" typeId="forecasted-wind-direction"/>				<!-- MOSMIX Dataline: DD -->
+			<channel id="wind-speed" typeId="forecasted-wind-speed"/>						<!-- MOSMIX Dataline: FF -->
+			<channel id="gust-speed" typeId="forecasted-gust-speed"/>						<!-- MOSMIX Dataline: FXh -->
+			<channel id="pressure" typeId="forecasted-barometric-pressure"/>				<!-- MOSMIX Dataline: PPPP -->
+			<channel id="visibility" typeId="visibility"/>									<!-- MOSMIX Dataline: VV -->
+			<channel id="precipitation" typeId="forecasted-total-precipitation"/>			<!-- MOSMIX Dataline: RRhc -->
+			<channel id="cloud-cover" typeId="cloud-cover"/>								<!-- MOSMIX Dataline: Neff -->
+			<channel id="significant-weather" typeId="forecasted-significant-weather"/>		<!-- MOSMIX Dataline: WPch1 -->
+			<channel id="sw-icon" typeId="sw-icon"/>										<!-- Icon based on significant weather -->
 		</channels>
 	</channel-group-type>
 
 	<!-- Channels for the DWD Weather Forecast Binding -->
 	<channel-type id="time-stamp">
 		<item-type>DateTime</item-type>
-		<label>Observation Time</label>
-		<description>Time of data observation.</description>
+		<label>Forecast Time next Full hour</label>
+		<description>Forecast at the time of the next full hour.</description>
 		<category>Time</category>
 		<state readOnly="true" pattern="%1$tY-%1$tm-%1$td %1$tH:%1$tM:%1$tS"/>
 	</channel-type>
@@ -41,7 +59,7 @@
 		<state readOnly="true" pattern="%1$tY-%1$tm-%1$td"/>
 	</channel-type>
 
-	<channel-type id="forecasted-min-outdoor-temperature">
+	<channel-type id="forecasted-min-temperature">
 		<item-type>Number:Temperature</item-type>
 		<label>Minimum Temperature</label>
 		<description>Minimum forecasted outdoor temperature.</description>
@@ -49,12 +67,107 @@
 		<state readOnly="true" pattern="%.1f %unit%"/>
 	</channel-type>
 
-	<channel-type id="forecasted-max-outdoor-temperature">
+	<channel-type id="forecasted-max-temperature">
 		<item-type>Number:Temperature</item-type>
 		<label>Maximum Temperature</label>
 		<description>Maximum forecasted outdoor temperature.</description>
 		<category>Temperature</category>
 		<state readOnly="true" pattern="%.1f %unit%"/>
+	</channel-type>
+
+	<channel-type id="forecasted-wind-direction">
+		<item-type>Number:Angle</item-type>
+		<label>Wind Direction</label>
+		<description>Forecasted average wind direction of the last 12 hours.</description>
+		<category>Wind</category>
+		<state readOnly="true" pattern="%d %unit%"/>
+	</channel-type>
+
+	<channel-type id="forecasted-wind-speed">
+		<item-type>Number:Speed</item-type>
+		<label>Wind speed</label>
+		<description>Maximum wind speed.</description>
+		<category>Wind</category>
+		<state readOnly="true" pattern="%.1f %unit%"/>
+	</channel-type>
+
+	<channel-type id="gust-speed">
+		<item-type>Number:Speed</item-type>
+		<label>Maximum wind gust</label>
+		<description>Maximum wind gust within the last hour.</description>
+		<category>Wind</category>
+		<state readOnly="true" pattern="%.1f %unit%"/>
+	</channel-type>
+
+	<channel-type id="forecasted-gust-speed">
+		<item-type>Number:Speed</item-type>
+		<label>Maximum forcasted wind gust</label>
+		<description>Maximum forcasted wind gust within the last 12 hours.</description>
+		<category>Wind</category>
+		<state readOnly="true" pattern="%.1f %unit%"/>
+	</channel-type>
+
+	<channel-type id="forecasted-barometric-pressure">
+		<item-type>Number:Pressure</item-type>
+		<label>Forecasted Barometric pressure</label>
+		<description>Forecasted Barometric pressure</description>
+		<category>Pressure</category>
+		<state readOnly="true" pattern="%d %unit%"/>
+	</channel-type>
+
+	<channel-type id="visibility">
+		<item-type>Number:Length</item-type>
+		<label>Visibility</label>
+		<description>Possible Visibility</description>
+		<category>Number</category>
+		<state readOnly="true" pattern="%d %unit%"/>
+	</channel-type>
+
+	<channel-type id="total-precipitation">
+		<item-type>Number</item-type>
+		<label>Total precipitation</label>
+		<description>Total precipitation during the last hour.</description>
+		<category>Rain</category>
+		<state readOnly="true" pattern="%.1f l/m²"/>
+	</channel-type>
+
+	<channel-type id="forecasted-total-precipitation">
+		<item-type>Number</item-type>
+		<label>Forecasted total precipitation</label>
+		<description>Forecasted total precipitation during the last 12 hours.</description>
+		<category>Rain</category>
+		<state readOnly="true" pattern="%.1f l/m²"/>
+	</channel-type>
+
+	<channel-type id="cloud-cover">
+		<item-type>Number:Dimensionless</item-type>
+		<label>Effective Cloud Cover</label>
+		<description>Effective cloud cover</description>
+		<category>Clouds</category>
+		<state readOnly="true" pattern="%d %%"/>
+	</channel-type>
+
+	<channel-type id="significant-weather">
+		<item-type>String</item-type>
+		<label>Significant weather</label>
+		<description>Significant weather.</description>
+		<category>Sun_Clouds</category>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="forecasted-significant-weather">
+		<item-type>String</item-type>
+		<label>Forecasted significant weather</label>
+		<description>Forecasted significant weather dureing the last 12 hours.</description>
+		<category>Sun_Clouds</category>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="sw-icon">
+		<item-type>Image</item-type>
+		<label>Icon of significant weather</label>
+		<description>Icon representing the significant weather.</description>
+		<state readOnly="true"/>
 	</channel-type>
 
 </thing:thing-descriptions>
