@@ -23,7 +23,8 @@ mvn -s archetype-settings.xml archetype:generate -N \
   -DvendorName=openHAB \
   -Dnamespace=org.openhab \
   -Dauthor="$author" \
-  -DgithubUser="$githubUser"
+  -DgithubUser="$githubUser" \
+  -Dspotless.check.skip=true
 
 directory="org.openhab.binding.$id/"
 
